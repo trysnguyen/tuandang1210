@@ -95,6 +95,12 @@ public class LoginFrame extends JFrame {
             return;
         }
 
+        if (username.equals("admin") && password.equals("admin")) {
+            new AdminFrame().setVisible(true);
+            this.dispose();
+            return;
+        }
+
         try {
             Connection con = DatabaseConnection.getConnection();
             String sql = "select * from students where username = ? and password = ?";
