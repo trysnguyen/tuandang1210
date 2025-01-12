@@ -1,3 +1,4 @@
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -19,6 +20,8 @@ public class AdminFrame extends JFrame {
     private int clickCount = 0;
     private static final int DOUBLE_CLICK_THRESHOLD = 500;
     private static Timer resetTimer;
+    private JButton goToOrderManagementB;
+
 
     public AdminFrame() {
         setTitle("Admin");
@@ -129,13 +132,19 @@ public class AdminFrame extends JFrame {
         gbc.anchor = GridBagConstraints.CENTER;
         Lpanel.add(RefuseB,gbc);
 
+        goToOrderManagementB = new JButton("Go to Order Management");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        Lpanel.add(goToOrderManagementB, gbc);
+
         mainP.add(Rpanel);
         mainP.add(Lpanel);
 
         add(mainP);
         loadingbook();
         loadorder();
-
+        
         SearchB.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -190,6 +199,14 @@ public class AdminFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Request("Refuse");
+            }
+        });
+
+        goToOrderManagementB.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new OrderManagementFrame().setVisible(true);
+                setVisible(false);
             }
         });
     }
