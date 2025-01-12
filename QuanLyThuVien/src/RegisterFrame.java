@@ -19,6 +19,9 @@ public class RegisterFrame extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
 
         JLabel usernameLabel = new JLabel("Username:");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
         add(usernameLabel, gbc);
         usernameField = new JTextField(20);
         gbc.gridx = 1;
