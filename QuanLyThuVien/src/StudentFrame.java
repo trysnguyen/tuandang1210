@@ -1,3 +1,4 @@
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -192,9 +193,14 @@ public class StudentFrame extends JFrame {
 
     private void Order(String studentid, String studentname, String username) {
         int row = Booktable.getSelectedRow();
-        if (row!=-1) {
-            String book = bookmodel.getValueAt(row,0).toString();
+        if (row != -1) {
+            String book = bookmodel.getValueAt(row, 0).toString();
             String status = "Pending";
+
+            java.sql.Date orderedDate = new java.sql.Date(System.currentTimeMillis());
+
+            java.sql.Date returnedDate = new java.sql.Date(orderedDate.getTime() + (3 * 24 * 60 * 60 * 1000));
+
             try {
                 Connection con = DatabaseConnection.getConnection();
                 String check = "SELECT * FROM OrderBook WHERE StudentID = ? AND Bookname = ? AND Status = ?";
@@ -211,7 +217,8 @@ public class StudentFrame extends JFrame {
                     return;
                 }
 
-                String sql = "insert into OrderBook (username,Studentname,StudentID,Bookname,Status) values (?,?,?,?,?)";
+                String sql = "INSERT INTO OrderBook (username, Studentname, StudentID, Bookname, Status, OrderedDate, ReturnedDate) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement ps = con.prepareStatement(sql);
 
                 ps.setString(1, username);
@@ -219,10 +226,13 @@ public class StudentFrame extends JFrame {
                 ps.setString(3, studentid);
                 ps.setString(4, book);
                 ps.setString(5, status);
-                ordermodel.addRow(new Object[] {username,studentname,studentid,book,status});
+                ps.setDate(6, orderedDate);
+                ps.setDate(7, returnedDate);
 
-                int rowaffected = ps.executeUpdate();
-                if (rowaffected>0) {
+                ordermodel.addRow(new Object[]{username, studentname, studentid, book, status, orderedDate, returnedDate});
+
+                int rowAffected = ps.executeUpdate();
+                if (rowAffected > 0) {
                     JOptionPane.showMessageDialog(this, "Ordered successfully");
                     ordermodel.setRowCount(0);
                     loadorder(studentid);
@@ -234,7 +244,7 @@ public class StudentFrame extends JFrame {
         }
     }
 
+
     public static void main(String[] args) {
-        new StudentFrame("123","dsad","dsa").setVisible(true);
     }
 }
