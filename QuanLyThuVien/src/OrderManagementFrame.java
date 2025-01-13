@@ -1,4 +1,3 @@
-package ThuVien;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -10,7 +9,7 @@ import java.sql.*;
 public class OrderManagementFrame extends JFrame {
     private JTable Ordertable;
     private DefaultTableModel ordermodel;
-    private JButton Search, openAdminFrameB;
+    private JButton Search, openAdminFrameB, Returned;
     private JTextField searchfield;
 
     public OrderManagementFrame() {
@@ -35,17 +34,21 @@ public class OrderManagementFrame extends JFrame {
         gbc.gridy = 0;
         searchpanel.add(searchfield, gbc);
 
-        // Search button
         Search = new JButton("Search");
         gbc.gridx = 2;
         gbc.gridy = 0;
         searchpanel.add(Search, gbc);
 
-        // Go to Admin button
         openAdminFrameB = new JButton("Go to Admin");
         gbc.gridx = 3;
         gbc.gridy = 0;
         searchpanel.add(openAdminFrameB, gbc);
+
+        // Add Returned button
+        Returned = new JButton("Returned");
+        gbc.gridx = 4;
+        gbc.gridy = 0;
+        searchpanel.add(Returned, gbc);
 
         String[] columns = {"Username", "Student Name", "Student ID", "Book Name", "Status", "Ordered Date", "Returned Date"};
         ordermodel = new DefaultTableModel(columns, 0);
@@ -63,7 +66,7 @@ public class OrderManagementFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new AdminFrame().setVisible(true);
-                setVisible(false); // Hide the OrderManagementFrame
+                setVisible(false);
             }
         });
 
@@ -71,6 +74,13 @@ public class OrderManagementFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 searchAcceptedOrders();
+            }
+        });
+
+        Returned.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                markAsReturned();
             }
         });
     }
@@ -104,16 +114,19 @@ public class OrderManagementFrame extends JFrame {
     private void searchAcceptedOrders() {
         String bookName = searchfield.getText().trim();
 
-        if (bookName.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter a book name to search.");
-            return;
-        }
-
         try {
             Connection con = DatabaseConnection.getConnection();
-            String sql = "SELECT * FROM OrderBook WHERE Bookname LIKE ? AND Status = 'Accept'";
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + bookName + "%");
+            String sql;
+            PreparedStatement ps;
+
+            if (bookName.isEmpty()) {
+                sql = "SELECT * FROM OrderBook WHERE Status = 'Accept'";
+                ps = con.prepareStatement(sql);
+            } else {
+                sql = "SELECT * FROM OrderBook WHERE Bookname LIKE ? AND Status = 'Accept'";
+                ps = con.prepareStatement(sql);
+                ps.setString(1, "%" + bookName + "%");
+            }
 
             ResultSet rs = ps.executeQuery();
 
@@ -133,6 +146,37 @@ public class OrderManagementFrame extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "An error occurred while searching for orders.");
+        }
+    }
+
+    private void markAsReturned() {
+        int selectedRow = Ordertable.getSelectedRow();
+        if (selectedRow != -1) {
+            String studentId = ordermodel.getValueAt(selectedRow, 2).toString();
+            String bookName = ordermodel.getValueAt(selectedRow, 3).toString();
+
+            try {
+                Connection con = DatabaseConnection.getConnection();
+
+                String sql = "UPDATE OrderBook SET Status = 'Returned' WHERE StudentID = ? AND Bookname = ?";
+                PreparedStatement ps = con.prepareStatement(sql);
+                ps.setString(1, studentId);
+                ps.setString(2, bookName);
+
+                int rowsUpdated = ps.executeUpdate();
+                if (rowsUpdated > 0) {
+                    JOptionPane.showMessageDialog(this, "Book returned successfully.");
+
+                    ordermodel.removeRow(selectedRow);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to mark book as returned.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "An error occurred while updating the order status.");
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select an order to mark as returned.");
         }
     }
 
